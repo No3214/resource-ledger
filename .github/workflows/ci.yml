@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Verify Python runtime
+        run: python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
+      - name: Run regression tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Run synthetic examples
+        run: |
+          python3 resource_ledger.py examples/synthetic.csv --output "$RUNNER_TEMP/resource-ledger.json"
+          python3 resource_ledger.py examples/synthetic.csv --format markdown --output "$RUNNER_TEMP/resource-ledger.md"

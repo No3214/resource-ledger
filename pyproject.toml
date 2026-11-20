@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "no3214-resource-ledger"
+version = "0.1.0"
+description = "Offline monthly electricity, water and waste CSV validation for small businesses"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [{name = "No3214"}]
+dependencies = []
+
+[project.scripts]
+resource-ledger = "resource_ledger:main"
+
+[tool.setuptools]
+py-modules = ["resource_ledger"]

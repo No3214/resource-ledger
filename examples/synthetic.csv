@@ -1,0 +1,9 @@
+month,site,metric,amount,unit,activity_count,activity_unit
+2026-01,Demo Guesthouse,electricity,1200.50,kWh,80,occupied_room_night
+2026-01,Demo Guesthouse,water,45.25,m3,80,occupied_room_night
+2026-01,Demo Guesthouse,waste,110,kg,80,occupied_room_night
+2026-02,Demo Guesthouse,electricity,1000,kWh,0,occupied_room_night
+2026-02,Demo Guesthouse,water,42,m3,0,occupied_room_night
+2026-01,Demo Cafe,electricity,250,kWh,500,cover
+2026-01,Demo Cafe,water,8.5,m3,500,cover
+2026-01,Demo Cafe,waste,35,kg,500,cover
