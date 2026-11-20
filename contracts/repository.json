@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "checks": [
+    {"id": "python-version", "repo": "resource-ledger", "kind": "equals", "file": "pyproject.toml", "pointer": "/project/requires-python", "expected": ">=3.11"},
+    {"id": "runtime-dependencies", "repo": "resource-ledger", "kind": "equals", "file": "pyproject.toml", "pointer": "/project/dependencies", "expected": []},
+    {"id": "console-command", "repo": "resource-ledger", "kind": "equals", "file": "pyproject.toml", "pointer": "/project/scripts/resource-ledger", "expected": "resource_ledger:main"},
+    {"id": "first-report-tr", "repo": "resource-ledger", "kind": "file_exists", "file": "examples/README.tr.md"},
+    {"id": "input-template", "repo": "resource-ledger", "kind": "file_exists", "file": "examples/template.csv"},
+    {"id": "expected-json", "repo": "resource-ledger", "kind": "file_exists", "file": "examples/synthetic.expected.json"},
+    {"id": "expected-markdown", "repo": "resource-ledger", "kind": "file_exists", "file": "examples/synthetic.expected.md"},
+    {"id": "example-acceptance-tests", "repo": "resource-ledger", "kind": "file_exists", "file": "tests/test_examples.py"},
+    {"id": "ci-workflow", "repo": "resource-ledger", "kind": "file_exists", "file": ".github/workflows/ci.yml"}
+  ]
+}
