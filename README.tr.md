@@ -17,13 +17,14 @@ doğrudan çalıştırın; Python paketi kurmak gerekmez:
 ```sh
 git clone https://github.com/No3214/resource-ledger.git
 cd resource-ledger
-python3 resource_ledger.py examples/synthetic.csv
 python3 resource_ledger.py examples/synthetic.csv --format markdown
-python3 resource_ledger.py examples/synthetic.csv --output rapor.json
-python3 -m unittest discover -s tests -v
 ```
 
 Python komutunuz `python` ise (Windows'ta yaygındır), `python3` yerine onu kullanın.
+
+**Sonraki adım: [kendi verinizle ilk rapor](examples/README.tr.md).** Rehberde boş
+CSV şablonu, karşılaştırılacak örnek raporlar, bilerek hatalı hazırlanmış bir dosya
+ve özel pilot kayıt formu var. İşletme kayıtlarınızı eklemeden sentetik örneği deneyin.
 
 Örnekteki bütün işletmeler ve sayılar sentetiktir. Örnek, eksik ölçümleri ve sıfır
 faaliyet sayısını bilerek içerir. `--output`, raporu önce hedef klasörde geçici
@@ -113,6 +114,10 @@ Doğrulama hatasında yarım rapor üretilmez; mevcut çıktı dosyası değişm
 mesajları ham veri satırlarını göstermez. `--output` eksik üst klasör oluşturmaz.
 
 ## Geliştirme
+
+```sh
+python3 -m unittest discover -s tests -v
+```
 
 Testler standart Python kütüphanesini kullanır. CI, Linux'ta Python 3.11–3.15;
 Windows ve macOS'ta Python 3.12 ile çalışır. Ayrı bir Python 3.11 işi wheel

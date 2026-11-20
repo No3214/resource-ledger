@@ -1,0 +1,196 @@
+{
+  "known_sites": [
+    "Demo Cafe",
+    "Demo Guesthouse"
+  ],
+  "monthly_recorded_totals": [
+    {
+      "metrics": {
+        "electricity": {
+          "coverage": "complete_for_known_sites",
+          "missing_sites": [],
+          "recorded_total": "1450.5",
+          "reporting_sites": 2,
+          "unit": "kWh"
+        },
+        "waste": {
+          "coverage": "complete_for_known_sites",
+          "missing_sites": [],
+          "recorded_total": "145",
+          "reporting_sites": 2,
+          "unit": "kg"
+        },
+        "water": {
+          "coverage": "complete_for_known_sites",
+          "missing_sites": [],
+          "recorded_total": "53.75",
+          "reporting_sites": 2,
+          "unit": "m3"
+        }
+      },
+      "month": "2026-01"
+    },
+    {
+      "metrics": {
+        "electricity": {
+          "coverage": "partial_for_known_sites",
+          "missing_sites": [
+            "Demo Cafe"
+          ],
+          "recorded_total": "1000",
+          "reporting_sites": 1,
+          "unit": "kWh"
+        },
+        "waste": {
+          "coverage": "partial_for_known_sites",
+          "missing_sites": [
+            "Demo Cafe",
+            "Demo Guesthouse"
+          ],
+          "recorded_total": null,
+          "reporting_sites": 0,
+          "unit": "kg"
+        },
+        "water": {
+          "coverage": "partial_for_known_sites",
+          "missing_sites": [
+            "Demo Cafe"
+          ],
+          "recorded_total": "42",
+          "reporting_sites": 1,
+          "unit": "m3"
+        }
+      },
+      "month": "2026-02"
+    }
+  ],
+  "months": [
+    "2026-01",
+    "2026-02"
+  ],
+  "normalization": {
+    "decimal_places": 6,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "periods": [
+    {
+      "activity_count": 500,
+      "activity_unit": "cover",
+      "metrics": {
+        "electricity": {
+          "amount": "250",
+          "normalization_reason": null,
+          "normalized_amount": "0.5",
+          "normalized_unit": "kWh/cover",
+          "unit": "kWh"
+        },
+        "waste": {
+          "amount": "35",
+          "normalization_reason": null,
+          "normalized_amount": "0.07",
+          "normalized_unit": "kg/cover",
+          "unit": "kg"
+        },
+        "water": {
+          "amount": "8.5",
+          "normalization_reason": null,
+          "normalized_amount": "0.017",
+          "normalized_unit": "m3/cover",
+          "unit": "m3"
+        }
+      },
+      "month": "2026-01",
+      "site": "Demo Cafe"
+    },
+    {
+      "activity_count": 80,
+      "activity_unit": "occupied_room_night",
+      "metrics": {
+        "electricity": {
+          "amount": "1200.5",
+          "normalization_reason": null,
+          "normalized_amount": "15.00625",
+          "normalized_unit": "kWh/occupied_room_night",
+          "unit": "kWh"
+        },
+        "waste": {
+          "amount": "110",
+          "normalization_reason": null,
+          "normalized_amount": "1.375",
+          "normalized_unit": "kg/occupied_room_night",
+          "unit": "kg"
+        },
+        "water": {
+          "amount": "45.25",
+          "normalization_reason": null,
+          "normalized_amount": "0.565625",
+          "normalized_unit": "m3/occupied_room_night",
+          "unit": "m3"
+        }
+      },
+      "month": "2026-01",
+      "site": "Demo Guesthouse"
+    },
+    {
+      "activity_count": null,
+      "activity_unit": null,
+      "metrics": {
+        "electricity": {
+          "amount": null,
+          "normalization_reason": "missing_measurement",
+          "normalized_amount": null,
+          "normalized_unit": null,
+          "unit": "kWh"
+        },
+        "waste": {
+          "amount": null,
+          "normalization_reason": "missing_measurement",
+          "normalized_amount": null,
+          "normalized_unit": null,
+          "unit": "kg"
+        },
+        "water": {
+          "amount": null,
+          "normalization_reason": "missing_measurement",
+          "normalized_amount": null,
+          "normalized_unit": null,
+          "unit": "m3"
+        }
+      },
+      "month": "2026-02",
+      "site": "Demo Cafe"
+    },
+    {
+      "activity_count": 0,
+      "activity_unit": "occupied_room_night",
+      "metrics": {
+        "electricity": {
+          "amount": "1000",
+          "normalization_reason": "zero_activity_count",
+          "normalized_amount": null,
+          "normalized_unit": "kWh/occupied_room_night",
+          "unit": "kWh"
+        },
+        "waste": {
+          "amount": null,
+          "normalization_reason": "missing_measurement",
+          "normalized_amount": null,
+          "normalized_unit": "kg/occupied_room_night",
+          "unit": "kg"
+        },
+        "water": {
+          "amount": "42",
+          "normalization_reason": "zero_activity_count",
+          "normalized_amount": null,
+          "normalized_unit": "m3/occupied_room_night",
+          "unit": "m3"
+        }
+      },
+      "month": "2026-02",
+      "site": "Demo Guesthouse"
+    }
+  ],
+  "schema_version": "1.0",
+  "scope": "Only input sites and the inclusive first-to-last input month. Completeness outside this scope is unknown.",
+  "source_record_count": 8
+}
