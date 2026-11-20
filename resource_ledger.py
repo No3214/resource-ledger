@@ -6,6 +6,7 @@ import argparse
 import csv
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP, localcontext
+from functools import partial
 import io
 import json
 import os
@@ -342,7 +343,14 @@ def _write_report_atomic(path: Path, output: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser_options = {}
+    if sys.version_info >= (3, 14):
+        parser_options["color"] = False
+        if sys.version_info < (3, 15):
+            # 3.14 probes stdout while creating the formatter, before applying
+            # parser.color. 3.15 removed this formatter constructor parameter.
+            parser_options["formatter_class"] = partial(argparse.HelpFormatter, color=False)
+    parser = argparse.ArgumentParser(description=__doc__, **parser_options)
     parser.add_argument("input", type=Path, help="UTF-8 input CSV")
     parser.add_argument("--format", choices=("json", "markdown"), default="json")
     parser.add_argument("--output", type=Path, help="write to a file instead of standard output")
