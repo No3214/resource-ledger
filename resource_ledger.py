@@ -273,6 +273,51 @@ def render_markdown(report: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _discard_failed_stream(stream) -> None:
+    """Prevent a failed descriptor from being flushed again at shutdown."""
+    try:
+        fd = stream.fileno()
+        with open(os.devnull, "wb") as sink:
+            os.dup2(sink.fileno(), fd)
+    except (OSError, AttributeError, ValueError):
+        # Closed or text-only captures may have no descriptor to redirect.
+        pass
+
+
+def _write_stream_utf8(stream, output: str) -> None:
+    """Complete short writes, then flush; zero progress is an I/O failure."""
+    binary = getattr(stream, "buffer", None)
+    target = stream if binary is None else binary
+    # Text-only capture (for example StringIO) remains supported. Memoryview
+    # slices avoid copying the remaining byte payload after each short write.
+    payload = output if binary is None else memoryview(output.encode("utf-8"))
+    offset = 0
+    while offset < len(payload):
+        chunk = payload[offset:offset + 65536]
+        written = target.write(chunk)
+        if type(written) is not int or not 0 < written <= len(chunk):
+            raise OSError("output stream did not make valid progress")
+        offset += written
+    stream.flush()
+
+
+def _write_stdout_utf8(output: str) -> None:
+    """Emit UTF-8 and detect buffered I/O errors before reporting success."""
+    try:
+        _write_stream_utf8(sys.stdout, output)
+    except (OSError, ValueError):
+        _discard_failed_stream(sys.stdout)
+        raise
+
+
+def _diagnostic(message: str) -> None:
+    """A failed stderr must not replace the documented process exit code."""
+    try:
+        _write_stream_utf8(sys.stderr, message + "\n")
+    except (OSError, ValueError):
+        _discard_failed_stream(sys.stderr)
+
+
 def _write_report_atomic(path: Path, output: str) -> None:
     """Replace the chosen pathname only after the complete report is written."""
     temporary_path: Path | None = None
@@ -312,18 +357,18 @@ def main(argv: list[str] | None = None) -> int:
         report = summarize(validate_csv(args.input))
         output = render_json(report) if args.format == "json" else render_markdown(report)
     except ValidationError as exc:
-        print(f"validation error: {exc}", file=sys.stderr)
+        _diagnostic(f"validation error: {exc}")
         return 2
     except OSError:
-        print("I/O error: unable to read input file", file=sys.stderr)
+        _diagnostic("I/O error: unable to read input file")
         return 3
     try:
         if args.output:
             _write_report_atomic(args.output, output)
         else:
-            sys.stdout.write(output)
-    except OSError:
-        print("I/O error: unable to write report", file=sys.stderr)
+            _write_stdout_utf8(output)
+    except (OSError, ValueError):
+        _diagnostic("I/O error: unable to write report")
         return 3
     return 0
 

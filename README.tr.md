@@ -11,22 +11,35 @@ sertifikası üretmez. Hesap açmaz; ağ, telemetri ve API anahtarı kullanmaz.
 
 ## Hızlı başlangıç
 
-Python **3.11 veya üzeri** ile depo klasöründe çalıştırın. Paket kurmak gerekmez:
+Bu komutlar için Python **3.11 veya üzeri** ve Git gerekir. Depoyu indirip aracı
+doğrudan çalıştırın; Python paketi kurmak gerekmez:
 
 ```sh
+git clone https://github.com/No3214/resource-ledger.git
+cd resource-ledger
 python3 resource_ledger.py examples/synthetic.csv
 python3 resource_ledger.py examples/synthetic.csv --format markdown
 python3 resource_ledger.py examples/synthetic.csv --output rapor.json
 python3 -m unittest discover -s tests -v
 ```
 
+Python komutunuz `python` ise (Windows'ta yaygındır), `python3` yerine onu kullanın.
+
 Örnekteki bütün işletmeler ve sayılar sentetiktir. Örnek, eksik ölçümleri ve sıfır
 faaliyet sayısını bilerek içerir. `--output`, raporu önce hedef klasörde geçici
 bir dosyaya tamamen yazar; sonra seçilen rapor yolunu atomik olarak değiştirir.
 Yazma, diske aktarma veya değiştirme hatasında eski rapor korunur. Çıktı yolu bir
 sembolik/sabit bağlantıysa bağlantının kendisi değiştirilir; bağlantının diğer
-hedef dosyası düzenlenmez. Girdi CSV'sinin üzerine yazmayı, sabit bağlantıyla
-(hard link) verilse bile engeller. Özel kayıtlarınızı depoya yüklemeyin.
+hedef dosyası düzenlenmez. `--output` ile girdi CSV'sinin üzerine yazmayı, sabit
+bağlantıyla (hard link) verilse bile engeller. Kabuk yönlendirmesi (`>`), araç
+başlamadan hedef dosyayı açar veya boşaltır; çıktıyı girdi CSV'sine yönlendirmeyin.
+Özel kayıtlarınızı depoya yüklemeyin.
+
+Standart çıktıya veya `--output` ile yazılan raporlar UTF-8 kullanır. Sonraki
+görüntüleyiciyi UTF-8 okuyacak şekilde ayarlayın. Başarı kodu dönmeden standart
+çıktı tamponu boşaltılır; yazma veya tampon boşaltma hatası çıkış kodu 3 verir.
+Borular ve kabuk yönlendirmesi hata durumunda kısmi çıktı bırakabilir. Atomik
+dosya değiştirme davranışı için yukarıdaki `--output` seçeneğini kullanın.
 
 ## Girdi sözleşmesi
 
@@ -98,6 +111,14 @@ dönemi ve 1.200 takvim ayı içerir.
 
 Doğrulama hatasında yarım rapor üretilmez; mevcut çıktı dosyası değişmez. Hata
 mesajları ham veri satırlarını göstermez. `--output` eksik üst klasör oluşturmaz.
+
+## Geliştirme
+
+Testler standart Python kütüphanesini kullanır. CI, Linux'ta Python 3.11–3.15;
+Windows ve macOS'ta Python 3.12 ile çalışır. Ayrı bir Python 3.11 işi wheel
+paketini temiz bir sanal ortama kurar, kurulu komutları kaynak klasörünün dışında
+çalıştırır ve çıktıları kaynak sürümle karşılaştırır. Zorunlu `test` kontrolü,
+bütün platform testleri ve paket işi başarılıysa geçer. PyPI'ye paket yayımlanmadı.
 
 Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), güvenlik için
 [SECURITY.md](SECURITY.md). Lisans: [MIT](LICENSE). No3214 tarafından geliştirilir.

@@ -12,20 +12,105 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  verify:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.11'
+          - os: ubuntu-latest
+            python: '3.12'
+          - os: ubuntu-latest
+            python: '3.13'
+          - os: ubuntu-latest
+            python: '3.14'
+          - os: ubuntu-latest
+            python: '3.15'
+          - os: windows-latest
+            python: '3.12'
+          - os: macos-latest
+            python: '3.12'
     steps:
       - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify Python runtime
-        run: python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
+      - name: Select Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
       - name: Run regression tests
-        run: python3 -m unittest discover -s tests -v
+        run: |
+          python --version
+          python -m unittest discover -s tests -v
       - name: Run synthetic examples
         run: |
-          python3 resource_ledger.py examples/synthetic.csv --output "$RUNNER_TEMP/resource-ledger.json"
-          python3 resource_ledger.py examples/synthetic.csv --format markdown --output "$RUNNER_TEMP/resource-ledger.md"
+          python resource_ledger.py examples/synthetic.csv --output "$RUNNER_TEMP/resource-ledger.json"
+          python resource_ledger.py examples/synthetic.csv --format markdown --output "$RUNNER_TEMP/resource-ledger.md"
+
+  package:
+    name: Installed wheel / Python 3.11
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - name: Use the verified pip trust floor
+        run: |
+          python -m pip install --disable-pip-version-check "pip @ https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl#sha256=fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
+          python -c "import pip._vendor.certifi as c; assert tuple(map(int, c.__version__.split('.'))) >= (2026, 10, 19)"
+      - name: Build and install the wheel
+        run: |
+          python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/wheels" .
+          python -m venv "$RUNNER_TEMP/installed"
+          "$RUNNER_TEMP/installed/bin/python" -m pip install --no-index --no-deps "$RUNNER_TEMP"/wheels/*.whl
+      - name: Check installed commands outside the source directory
+        run: |
+          python resource_ledger.py examples/synthetic.csv --output "$RUNNER_TEMP/expected.json"
+          python resource_ledger.py examples/synthetic.csv --format markdown --output "$RUNNER_TEMP/expected.md"
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/installed/bin/python" -I -m resource_ledger "$GITHUB_WORKSPACE/examples/synthetic.csv" --output module.json
+          "$RUNNER_TEMP/installed/bin/resource-ledger" "$GITHUB_WORKSPACE/examples/synthetic.csv" --output console.json
+          "$RUNNER_TEMP/installed/bin/resource-ledger" "$GITHUB_WORKSPACE/examples/synthetic.csv" --format markdown --output console.md
+          diff expected.json module.json
+          diff expected.json console.json
+          diff expected.md console.md
+          "$RUNNER_TEMP/installed/bin/python" -I - <<'PY'
+          import importlib.metadata as metadata
+          from pathlib import Path
+          import sys
+          import resource_ledger
+          assert Path(resource_ledger.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
+          assert metadata.version("no3214-resource-ledger") == resource_ledger.__version__
+          assert not metadata.requires("no3214-resource-ledger")
+          PY
+
+  # Keep the existing required check name. A skipped, cancelled, or failed
+  # verification must not become a successful branch-protection check.
+  test:
+    name: test
+    if: ${{ always() }}
+    needs: [verify, package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every verification job to succeed
+        env:
+          VERIFICATION_RESULT: ${{ needs.verify.result }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+        run: |
+          test "$VERIFICATION_RESULT" = success
+          test "$PACKAGE_RESULT" = success

@@ -1,5 +1,5 @@
 import csv
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from decimal import Decimal
 import io
 import json
@@ -257,6 +257,115 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(json.loads(output.read_text())["schema_version"], "1.0")
         bad = self.cli(self.path, "--output", Path(self.temp.name) / "missing" / "report.json")
         self.assertEqual(bad.returncode, 3)
+
+    def test_stdout_is_utf8_independent_of_text_stream_encoding(self):
+        self.write([self.changed(site="İzmir — Café 🏡")])
+        report = ledger.summarize(ledger.validate_csv(self.path))
+        for encoding in ("ascii", "cp1252", "utf-16"):
+            for fmt, render in (("json", ledger.render_json),
+                                ("markdown", ledger.render_markdown)):
+                with self.subTest(encoding=encoding, format=fmt):
+                    result = subprocess.run(
+                        [sys.executable, str(ROOT / "resource_ledger.py"),
+                         str(self.path), "--format", fmt],
+                        env=dict(os.environ, PYTHONIOENCODING=encoding),
+                        capture_output=True, check=False, timeout=10)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stderr, b"")
+                    self.assertEqual(result.stdout, render(report).encode("utf-8"))
+
+    def test_main_supports_text_only_stdout_capture(self):
+        self.write()
+        captured = io.StringIO()
+        with redirect_stdout(captured):
+            code = ledger.main([str(self.path)])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(captured.getvalue())["source_record_count"], 1)
+
+    def test_main_completes_short_binary_writes(self):
+        class ShortWriter(io.RawIOBase):
+            def __init__(self):
+                self.payload = bytearray()
+
+            def writable(self):
+                return True
+
+            def write(self, data):
+                self.payload.extend(data[:1])
+                return min(1, len(data))
+
+        self.write([self.changed(site="İzmir 🏡")])
+        raw = ShortWriter()
+        with io.TextIOWrapper(raw, encoding="ascii") as captured:
+            with redirect_stdout(captured):
+                code = ledger.main([str(self.path)])
+            self.assertEqual(code, 0)
+            parsed = json.loads(bytes(raw.payload).decode("utf-8"))
+            self.assertEqual(parsed["known_sites"], ["İzmir 🏡"])
+            self.assertEqual(parsed["source_record_count"], 1)
+
+    def test_main_rejects_binary_writes_without_progress(self):
+        class StalledWriter(io.RawIOBase):
+            def __init__(self, result):
+                self.result = result
+
+            def writable(self):
+                return True
+
+            def write(self, data):
+                return self.result
+
+        self.write()
+        for result in (0, None):
+            with self.subTest(write_result=result):
+                with io.TextIOWrapper(StalledWriter(result), encoding="utf-8") as captured:
+                    errors = io.StringIO()
+                    with redirect_stdout(captured), redirect_stderr(errors):
+                        code = ledger.main([str(self.path)])
+                    self.assertEqual(code, 3)
+                    self.assertEqual(errors.getvalue(), "I/O error: unable to write report\n")
+
+    def test_main_closed_text_capture_returns_io_error(self):
+        self.write()
+        captured = io.StringIO()
+        captured.close()
+        errors = io.StringIO()
+        with redirect_stdout(captured), redirect_stderr(errors):
+            code = ledger.main([str(self.path)])
+        self.assertEqual(code, 3)
+        self.assertEqual(errors.getvalue(), "I/O error: unable to write report\n")
+
+    def test_stdout_closed_pipe_returns_io_error_without_shutdown_traceback(self):
+        self.write()
+        read_fd, write_fd = os.pipe()
+        os.close(read_fd)
+        with os.fdopen(write_fd, "wb") as sink:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "resource_ledger.py"), str(self.path)],
+                stdout=sink, stderr=subprocess.PIPE, check=False, timeout=10)
+        self.assertEqual(result.returncode, 3, result.stderr)
+        self.assertEqual(result.stderr.splitlines(), [b"I/O error: unable to write report"])
+
+    def test_combined_stdout_stderr_closed_pipe_keeps_io_exit_code(self):
+        self.write()
+        read_fd, write_fd = os.pipe()
+        os.close(read_fd)
+        with os.fdopen(write_fd, "wb") as sink:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "resource_ledger.py"), str(self.path)],
+                stdout=sink, stderr=subprocess.STDOUT, check=False, timeout=10)
+        self.assertEqual(result.returncode, 3)
+
+    @unittest.skipUnless(sys.platform.startswith("linux") and Path("/dev/full").exists(),
+                         "requires Linux /dev/full for a real ENOSPC write failure")
+    def test_stdout_full_device_returns_io_error_without_shutdown_traceback(self):
+        self.write()
+        with open("/dev/full", "wb") as sink:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "resource_ledger.py"), str(self.path)],
+                stdout=sink, stderr=subprocess.PIPE, check=False, timeout=10)
+        self.assertEqual(result.returncode, 3, result.stderr)
+        self.assertEqual(result.stderr.splitlines(), [b"I/O error: unable to write report"])
 
     def test_partial_write_failure_preserves_previous_report(self):
         self.write()

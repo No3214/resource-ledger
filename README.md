@@ -14,15 +14,19 @@ The project has not been validated against a real business's bills.
 
 ## Quick start
 
-Python **3.11 or newer** is required. Run from the repository directory; no install
-step is necessary:
+Python **3.11 or newer** and Git are required for the commands below. Clone the
+repository and run the tool directly; no Python package installation is needed:
 
 ```sh
+git clone https://github.com/No3214/resource-ledger.git
+cd resource-ledger
 python3 resource_ledger.py examples/synthetic.csv
 python3 resource_ledger.py examples/synthetic.csv --format markdown
 python3 resource_ledger.py examples/synthetic.csv --output report.json
 python3 -m unittest discover -s tests -v
 ```
+
+If your Python command is `python` (common on Windows), use it in place of `python3`.
 
 All data in `examples/synthetic.csv` is invented. It deliberately includes a zero
 activity count and missing measurements to demonstrate those states. `--output`
@@ -30,7 +34,14 @@ stages the complete report in the destination directory, then atomically replace
 the selected report path. A write, flush, or replacement failure preserves an
 existing report. Existing output symlinks/hard links are replaced at that path;
 their other linked targets are not edited. Keep reports in a private directory.
-The tool refuses to overwrite the input CSV, including through hard links.
+The tool refuses to overwrite the input CSV through `--output`, including through
+hard links. Shell redirection (`>`) opens or truncates its target before the tool
+starts; never redirect output onto the input CSV.
+
+Reports sent to stdout or `--output` use UTF-8. Configure a downstream viewer to
+read UTF-8. Stdout is flushed before success is returned; a failed write or flush
+returns exit code 3. Pipes and shell redirection can still leave partial output
+on failure. Use `--output` for the atomic file replacement described above.
 
 ## CSV contract
 
@@ -111,6 +122,12 @@ does not encrypt reports; store business records using your own access controls.
 ## Development
 
 Tests use Python's standard library. Runtime has no third-party dependencies.
+CI runs the tests on Linux with Python 3.11–3.15 and on Windows/macOS with Python
+3.12. A separate Python 3.11 job builds and installs a wheel into a clean virtual
+environment, runs both installed commands outside the source directory, and
+compares their reports with the source commands. The required `test` check passes
+only when all platform tests and the installed-wheel job succeed.
+
 `pyproject.toml` also supports optional packaging with setuptools, which is a
 build dependency, not required for the direct commands above. No package has been
 published to PyPI. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
