@@ -119,7 +119,11 @@ mesajları ham veri satırlarını göstermez. `--output` eksik üst klasör olu
 python3 -m unittest discover -s tests -v
 ```
 
-Testler standart Python kütüphanesini kullanır. CI, Linux'ta Python 3.11–3.15;
+Testler standart Python kütüphanesini kullanır. Repodaki beklenen örnek raporlar
+gerçek CLI çıktısıyla karşılaştırılır; boş şablon ve yinelenen kayıt denemesi de
+kontrol edilir. CI referans dosyalarını yeniden üretmez. Geliştiriciler ayrıca
+[isteğe bağlı depo sözleşmesini](contracts/README.md) Repo Contract Check ile
+çalıştırabilir. CI, Linux'ta Python 3.11–3.15;
 Windows ve macOS'ta Python 3.12 ile çalışır. Ayrı bir Python 3.11 işi wheel
 paketini temiz bir sanal ortama kurar, kurulu komutları kaynak klasörünün dışında
 çalıştırır ve çıktıları kaynak sürümle karşılaştırır. Zorunlu `test` kontrolü,
