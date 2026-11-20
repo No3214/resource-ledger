@@ -240,7 +240,7 @@ def render_json(report: dict) -> str:
 def _markdown(value: object) -> str:
     # Escape HTML and explicit Markdown delimiters; renderer autolinks may remain.
     text = str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    for char in ("\\", "`", "*", "_", "[", "]", "(", ")", "#", "!", "|"):
+    for char in ("\\", "`", "*", "_", "[", "]", "(", ")", "#", "!", "|", "~"):
         text = text.replace(char, "\\" + char)
     return text
 

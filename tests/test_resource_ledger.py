@@ -201,6 +201,19 @@ class LedgerTests(unittest.TestCase):
         self.assertIn("&lt;img", rendered)
         self.assertIn(r"\|\[x\]\(https://invalid.example\)", rendered)
 
+    def test_markdown_preserves_literal_tildes_in_site_and_missing_site_labels(self):
+        for label, escaped in [("~Demo Cafe~", r"\~Demo Cafe\~"),
+                               ("~~Demo Cafe~~", r"\~\~Demo Cafe\~\~")]:
+            report = self.report([self.changed(site=label),
+                                  self.changed(site="Demo Annex", metric="water", unit="m3")])
+            self.assertIn(label, json.loads(ledger.render_json(report))["known_sites"])
+            measurements, totals = ledger.render_markdown(report).split("## Recorded monthly totals", 1)
+            for location, section, expected in (
+                    ("site", measurements, f"| 2026-01 | {escaped} | electricity | 12.5 |"),
+                    ("missing_sites", totals, f"| 2026-01 | water | 12.5 | m3 | 1 | {escaped} |")):
+                with self.subTest(label=label, location=location):
+                    self.assertIn(expected, section)
+
     def test_formula_label_has_no_spreadsheet_export(self):
         label = '=HYPERLINK("https://invalid.example")'
         report = self.report([self.changed(site=label)])

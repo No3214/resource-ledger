@@ -20,13 +20,15 @@ repository and run the tool directly; no Python package installation is needed:
 ```sh
 git clone https://github.com/No3214/resource-ledger.git
 cd resource-ledger
-python3 resource_ledger.py examples/synthetic.csv
 python3 resource_ledger.py examples/synthetic.csv --format markdown
-python3 resource_ledger.py examples/synthetic.csv --output report.json
-python3 -m unittest discover -s tests -v
 ```
 
 If your Python command is `python` (common on Windows), use it in place of `python3`.
+
+**Next: [your first report with your own data](examples/README.md).** The walkthrough
+includes a blank CSV template, expected example reports, an intentionally invalid
+file, and a private pilot record. Start with the synthetic example before adding
+business records.
 
 All data in `examples/synthetic.csv` is invented. It deliberately includes a zero
 activity count and missing measurements to demonstrate those states. `--output`
@@ -120,6 +122,10 @@ raw input rows. `--output` does not create missing parent directories. The tool
 does not encrypt reports; store business records using your own access controls.
 
 ## Development
+
+```sh
+python3 -m unittest discover -s tests -v
+```
 
 Tests use Python's standard library. Runtime has no third-party dependencies.
 CI runs the tests on Linux with Python 3.11–3.15 and on Windows/macOS with Python
